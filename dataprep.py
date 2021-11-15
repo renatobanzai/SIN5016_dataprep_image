@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import cv2
 from skimage.feature import hog, local_binary_pattern
 import json
@@ -31,7 +33,8 @@ def get_lbp(image):
     METHOD = "uniform"
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    feature_lbp = local_binary_pattern(image, n_points, radius, METHOD)
+    image_lbp = local_binary_pattern(image, n_points, radius, METHOD)
+    feature_lbp = cv2.calcHist(image_lbp.astype(np.uint8), [0], None, [256], (0, 256))
     return feature_lbp
 
 def save(dest_dir, dest_file, value, dic_labels):
@@ -48,8 +51,8 @@ def dataprep_image(params):
 
     face = get_face(image)
     if not face is None:
-        feature_hog = get_hog(face)
-        save(hog_dir, file_name, feature_hog, dic_labels)
+        # feature_hog = get_hog(face)
+        # save(hog_dir, file_name, feature_hog, dic_labels)
         feature_lbp = get_lbp(face)
         save(lbp_dir, file_name, feature_lbp, dic_labels)
     else:
@@ -62,10 +65,8 @@ lbp_dir = "./datasets/lbp/"
 df_labels = pd.read_csv("./identity_CelebA.txt", sep=" ")
 dic_labels = dict(df_labels.values)
 
-file_hd5 = "./datasets/descritores_{}".format(datetime.now().strftime("%m_%d_%H_%M"))
-
 imagens = [f for f in listdir(work_dir) if isfile(join(work_dir, f))]
-max_iter = 1000
+max_iter = 100
 
 start_time = datetime.now()
 
