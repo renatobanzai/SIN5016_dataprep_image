@@ -23,9 +23,9 @@ def get_face(image):
         return face
 
 def get_hog(image):
-    feature_hog, hog_image = hog(image, orientations=8, pixels_per_cell=(8, 8), cells_per_block=(2, 2), visualize=True)
+    feature_hog, hog_image = hog(image, orientations=9, pixels_per_cell=(16, 16), cells_per_block=(1, 1), visualize=True, feature_vector=True)
     # hog_image_rescaled = (exposure.rescale_intensity(hog_image, in_range=(0, 10)) *255).astype(np.uint8)
-    return feature_hog
+    return feature_hog.astype(np.float16)
 
 def get_lbp(image):
     radius = 3
@@ -35,13 +35,17 @@ def get_lbp(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image_lbp = local_binary_pattern(image, n_points, radius, METHOD)
     feature_lbp = cv2.calcHist(image_lbp.astype(np.uint8), [0], None, [256], (0, 256))
-    return feature_lbp
+    return feature_lbp.squeeze().astype(np.uint8)
 
 def save(dest_dir, dest_file, value, dic_labels):
     with open(dest_dir+dest_file+".json", "w") as text_file:
-        lista = np.ndarray.tolist(value)
-        lista.insert(0, dic_labels[dest_file])
-        json.dump(lista, text_file)
+        try:
+            lista = np.ndarray.tolist(value)
+            lista.insert(0, dic_labels[dest_file])
+            json.dump(lista, text_file)
+        except:
+            print("Problema com o arquivo {}".format(dest_file))
+            pass
 
 def dataprep_image(params):
     img_work_dir, file_name, dic_labels = params
@@ -51,8 +55,8 @@ def dataprep_image(params):
 
     face = get_face(image)
     if not face is None:
-        # feature_hog = get_hog(face)
-        # save(hog_dir, file_name, feature_hog, dic_labels)
+        feature_hog = get_hog(face)
+        save(hog_dir, file_name, feature_hog, dic_labels)
         feature_lbp = get_lbp(face)
         save(lbp_dir, file_name, feature_lbp, dic_labels)
     else:
@@ -62,7 +66,7 @@ work_dir = "./images/celebA_30_percent/"
 hog_dir = "./datasets/hog/"
 lbp_dir = "./datasets/lbp/"
 
-df_labels = pd.read_csv("./identity_CelebA.txt", sep=" ")
+df_labels = pd.read_csv("./identity_CelebA.txt", sep=" ", header=None)
 dic_labels = dict(df_labels.values)
 
 imagens = [f for f in listdir(work_dir) if isfile(join(work_dir, f))]

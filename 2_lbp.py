@@ -20,8 +20,10 @@ def processar_lbp(params):
 
     image = imread(img_work_dir+img_file_name, cv2.IMREAD_GRAYSCALE)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    feature_lbp = local_binary_pattern(image, n_points, radius, METHOD)
-    imsave(img_dest_dir+img_file_name, feature_lbp)
+    image_lbp = local_binary_pattern(image, n_points, radius, METHOD)
+    feature_lbp = cv2.calcHist(image_lbp.astype(np.uint8), [0], None, [256], (0, 256))
+    feature_lbp.squeeze().astype(np.uint8)
+    imsave(img_dest_dir+img_file_name, feature_lbp.squeeze().astype(np.uint8))
     # salvar a variável fd num formato que seja facilmente legível: json, hdf5
 
 
